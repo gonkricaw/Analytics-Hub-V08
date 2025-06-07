@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 14 14 68; /* #0E0E44 */
+    --foreground: 255 255 255;
+    --primary: 255 122 0; /* #FF7A00 */
+    --primary-foreground: 255 255 255;
+    --secondary: 30 30 90;
+    --secondary-foreground: 255 255 255;
+    --muted: 20 20 60;
+    --muted-foreground: 200 200 200;
+    --accent: 255 122 0; /* #FF7A00 */
+    --accent-foreground: 255 255 255;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 40 40 100;
+    --input: 40 40 100;
+    --ring: 255 122 0; /* #FF7A00 */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border/20;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background: linear-gradient(135deg, #0E0E44 0%, #1a1a5e 100%);
+    min-height: 100vh;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/90 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-secondary/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 shadow-lg;
+  }
+  
+  .input-field {
+    @apply bg-secondary/30 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/60 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all duration-200;
+  }
+  
+  .navbar-item {
+    @apply text-white/80 hover:text-accent transition-colors duration-200 font-medium;
+  }
+  
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 text-white/80 hover:text-accent hover:bg-accent/10 rounded-lg transition-all duration-200;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent to-orange-400 bg-clip-text text-transparent;
+  }
+  
+  .glass-effect {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  border: 2px solid rgba(255, 122, 0, 0.3);
+  border-radius: 50%;
+  border-top: 2px solid #FF7A00;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Form validation styles */
+.error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-500/20;
+}
+
+.success {
+  @apply border-green-500 focus:border-green-500 focus:ring-green-500/20;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-40;
+}
+
+/* Tooltip styles */
+.tooltip {
+  @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg opacity-0 pointer-events-none transition-opacity duration-200;
+}
+
+.tooltip.show {
+  @apply opacity-100;
+}

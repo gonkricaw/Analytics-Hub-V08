@@ -1,0 +1,306 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model idbi_users {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  username              String?  @unique
+  password_hash         String
+  first_name            String
+  last_name             String
+  role_id               String
+  is_active             Boolean  @default(true)
+  is_email_verified     Boolean  @default(false)
+  email_verification_token String?
+  password_reset_token  String?
+  password_reset_expires DateTime?
+  last_login            DateTime?
+  login_attempts        Int      @default(0)
+  locked_until          DateTime?
+  must_change_password  Boolean  @default(true)
+  terms_accepted        Boolean  @default(false)
+  terms_accepted_at     DateTime?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  created_by            String?
+  updated_by            String?
+
+  // Relations
+  role                  idbi_roles @relation(fields: [role_id], references: [id])
+  sessions              idbi_user_sessions[]
+  audit_logs            idbi_audit_logs[]
+  content_created       idbi_content[] @relation("ContentCreator")
+  content_updated       idbi_content[] @relation("ContentUpdater")
+  invitations_sent      idbi_user_invitations[] @relation("InvitationSender")
+  invitations_received  idbi_user_invitations[] @relation("InvitationReceiver")
+  uploaded_files        idbi_files[]
+  created_dashboards    idbi_dashboards[]
+
+  @@map("idbi_users")
+}
+
+// Role-Based Access Control
+model idbi_roles {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  users               idbi_users[]
+  role_permissions    idbi_role_permissions[]
+  content_permissions idbi_content_permissions[]
+  user_invitations    idbi_user_invitations[]
+
+  @@map("idbi_roles")
+}
+
+model idbi_permissions {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  resource    String   // e.g., 'users', 'content', 'dashboard'
+  action      String   // e.g., 'create', 'read', 'update', 'delete'
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  role_permissions idbi_role_permissions[]
+
+  @@map("idbi_permissions")
+}
+
+model idbi_role_permissions {
+  id            String @id @default(cuid())
+  role_id       String
+  permission_id String
+
+  // Relations
+  role       idbi_roles       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission idbi_permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, permission_id])
+  @@map("idbi_role_permissions")
+}
+
+// User Sessions
+model idbi_user_sessions {
+  id         String   @id @default(cuid())
+  user_id    String
+  token      String   @unique
+  ip_address String?
+  user_agent String?
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  // Relations
+  user idbi_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("idbi_user_sessions")
+}
+
+// User Invitations
+model idbi_user_invitations {
+  id              String    @id @default(cuid())
+  email           String
+  first_name      String
+  last_name       String
+  role_id         String
+  invited_by      String
+  invitation_token String   @unique
+  expires_at      DateTime
+  accepted_at     DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  // Relations
+  role         idbi_roles @relation(fields: [role_id], references: [id])
+  inviter      idbi_users @relation("InvitationSender", fields: [invited_by], references: [id])
+  invited_user idbi_users? @relation("InvitationReceiver", fields: [email], references: [email])
+
+  @@map("idbi_user_invitations")
+}
+
+// Content Management
+model idbi_content {
+  id               String    @id @default(cuid())
+  title            String
+  description      String?
+  content_type     String    // 'dashboard', 'report', 'widget', 'iframe'
+  content_data     Json?     // Flexible JSON field for different content types
+  embed_url        String?   // For iframe content
+  encrypted_url    String?   // AES encrypted embed URL
+  is_active        Boolean   @default(true)
+  is_public        Boolean   @default(false)
+  view_count       Int       @default(0)
+  last_viewed      DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  created_by       String
+  updated_by       String?
+
+  // Relations
+  creator         idbi_users              @relation("ContentCreator", fields: [created_by], references: [id])
+  updater         idbi_users?             @relation("ContentUpdater", fields: [updated_by], references: [id])
+  categories      idbi_content_categories[]
+  permissions     idbi_content_permissions[]
+  dashboard_items idbi_dashboard_items[]
+
+  @@map("idbi_content")
+}
+
+model idbi_categories {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?  // Hex color for UI
+  icon        String?  // Icon identifier
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  content_categories idbi_content_categories[]
+
+  @@map("idbi_categories")
+}
+
+model idbi_content_categories {
+  id          String @id @default(cuid())
+  content_id  String
+  category_id String
+
+  // Relations
+  content  idbi_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  category idbi_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@unique([content_id, category_id])
+  @@map("idbi_content_categories")
+}
+
+model idbi_content_permissions {
+  id         String @id @default(cuid())
+  content_id String
+  role_id    String
+  can_view   Boolean @default(true)
+  can_edit   Boolean @default(false)
+  can_delete Boolean @default(false)
+
+  // Relations
+  content idbi_content @relation(fields: [content_id], references: [id], onDelete: Cascade)
+  role    idbi_roles   @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([content_id, role_id])
+  @@map("idbi_content_permissions")
+}
+
+// Dashboard Management
+model idbi_dashboards {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  layout_data Json?    // Dashboard layout configuration
+  is_default  Boolean  @default(false)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  created_by  String
+
+  // Relations
+  creator         idbi_users             @relation(fields: [created_by], references: [id])
+  dashboard_items idbi_dashboard_items[]
+
+  @@map("idbi_dashboards")
+}
+
+model idbi_dashboard_items {
+  id           String @id @default(cuid())
+  dashboard_id String
+  content_id   String
+  position_x   Int    @default(0)
+  position_y   Int    @default(0)
+  width        Int    @default(1)
+  height       Int    @default(1)
+  order_index  Int    @default(0)
+
+  // Relations
+  dashboard idbi_dashboards @relation(fields: [dashboard_id], references: [id], onDelete: Cascade)
+  content   idbi_content    @relation(fields: [content_id], references: [id], onDelete: Cascade)
+
+  @@unique([dashboard_id, content_id])
+  @@map("idbi_dashboard_items")
+}
+
+// Security & Audit
+model idbi_audit_logs {
+  id          String   @id @default(cuid())
+  user_id     String?
+  action      String   // 'login', 'logout', 'create', 'update', 'delete', etc.
+  resource    String?  // Table/resource affected
+  resource_id String?  // ID of the affected resource
+  old_values  Json?    // Previous values (for updates)
+  new_values  Json?    // New values (for creates/updates)
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now())
+
+  // Relations
+  user idbi_users? @relation(fields: [user_id], references: [id])
+
+  @@map("idbi_audit_logs")
+}
+
+model idbi_ip_blacklist {
+  id           String   @id @default(cuid())
+  ip_address   String   @unique
+  reason       String?  // Reason for blacklisting
+  blocked_at   DateTime @default(now())
+  blocked_until DateTime? // Temporary blocks
+  is_permanent Boolean  @default(false)
+  created_by   String?
+
+  @@map("idbi_ip_blacklist")
+}
+
+// System Settings
+model idbi_settings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  is_public   Boolean  @default(false) // Whether setting can be accessed by frontend
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("idbi_settings")
+}
+
+// File Uploads
+model idbi_files {
+  id           String   @id @default(cuid())
+  filename     String
+  original_name String
+  mime_type    String
+  file_size    Int
+  file_path    String
+  uploaded_by  String
+  is_public    Boolean  @default(false)
+  created_at   DateTime @default(now())
+
+  // Relations
+  uploader idbi_users @relation(fields: [uploaded_by], references: [id])
+
+  @@map("idbi_files")
+}
