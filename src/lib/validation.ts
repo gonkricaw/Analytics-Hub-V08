@@ -75,19 +75,18 @@ export const createUserSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: emailSchema,
-  password: passwordSchema,
-  roleId: z.string().uuid('Invalid role ID'),
-  isActive: z.boolean().default(true),
-  sendWelcomeEmail: z.boolean().default(true),
+  roleId: z.string().cuid('Invalid role ID'),
+  username: z.string().min(3, 'Username must be at least 3 characters').optional(),
+  sendInvitation: z.boolean().default(true),
 });
 
 export const updateUserSchema = z.object({
-  id: z.string().uuid('Invalid user ID'),
   firstName: z.string().min(2, 'First name must be at least 2 characters').optional(),
   lastName: z.string().min(2, 'Last name must be at least 2 characters').optional(),
   email: emailSchema.optional(),
-  roleId: z.string().uuid('Invalid role ID').optional(),
-  isActive: z.boolean().optional(),
+  username: z.string().min(3, 'Username must be at least 3 characters').optional(),
+  role_id: z.string().cuid('Invalid role ID').optional(),
+  is_active: z.boolean().optional(),
 });
 
 export const inviteUserSchema = z.object({
