@@ -38,6 +38,7 @@ model idbi_users {
   // Relations
   role                  idbi_roles @relation(fields: [role_id], references: [id])
   sessions              idbi_user_sessions[]
+  password_resets       idbi_password_resets[]
   audit_logs            idbi_audit_logs[]
   content_created       idbi_content[] @relation("ContentCreator")
   content_updated       idbi_content[] @relation("ContentUpdater")
@@ -109,6 +110,25 @@ model idbi_user_sessions {
   user idbi_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("idbi_user_sessions")
+}
+
+// Password Reset Tokens
+model idbi_password_resets {
+  id         String   @id @default(cuid())
+  user_id    String
+  email      String
+  token      String   @unique
+  token_hash String   @unique
+  expires_at DateTime
+  used_at    DateTime?
+  ip_address String?
+  user_agent String?
+  created_at DateTime @default(now())
+
+  // Relations
+  user idbi_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("idbi_password_resets")
 }
 
 // User Invitations
@@ -272,6 +292,23 @@ model idbi_ip_blacklist {
   created_by   String?
 
   @@map("idbi_ip_blacklist")
+}
+
+// Email Templates
+model idbi_email_templates {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., 'welcome', 'password_reset', 'invitation', 'suspension', 'announcement'
+  subject     String
+  html_body   String   @db.Text
+  text_body   String?  @db.Text
+  variables   Json?    // Available template variables
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  created_by  String?
+  updated_by  String?
+
+  @@map("idbi_email_templates")
 }
 
 // System Settings

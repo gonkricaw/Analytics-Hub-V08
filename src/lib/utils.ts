@@ -355,3 +355,61 @@ export function extractDomain(url: string): string {
     return ''
   }
 }
+
+// Rate limiting utility
+interface RateLimitConfig {
+  interval: number // Time window in milliseconds
+  uniqueTokenPerInterval: number // Max unique tokens per interval
+  maxAttempts: number // Max attempts per token per interval
+}
+
+interface RateLimitStore {
+  [key: string]: {
+    count: number
+    resetTime: number
+  }
+}
+
+const rateLimitStore: RateLimitStore = {}
+
+export function rateLimit(config: RateLimitConfig) {
+  return {
+    check: async (token: string): Promise<void> => {
+      const now = Date.now()
+      const key = `${token}`
+      
+      // Clean up expired entries
+      Object.keys(rateLimitStore).forEach(k => {
+        if (rateLimitStore[k].resetTime < now) {
+          delete rateLimitStore[k]
+        }
+      })
+      
+      // Check if token exists in store
+      if (!rateLimitStore[key]) {
+        rateLimitStore[key] = {
+          count: 1,
+          resetTime: now + config.interval
+        }
+        return
+      }
+      
+      // Check if reset time has passed
+      if (rateLimitStore[key].resetTime < now) {
+        rateLimitStore[key] = {
+          count: 1,
+          resetTime: now + config.interval
+        }
+        return
+      }
+      
+      // Increment count
+      rateLimitStore[key].count++
+      
+      // Check if limit exceeded
+      if (rateLimitStore[key].count > config.maxAttempts) {
+        throw new Error('Rate limit exceeded')
+      }
+    }
+  }
+}
