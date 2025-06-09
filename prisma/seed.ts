@@ -88,6 +88,12 @@ async function main() {
     { name: 'files.upload', description: 'Upload files', resource: 'files', action: 'upload' },
     { name: 'files.read', description: 'View files', resource: 'files', action: 'read' },
     { name: 'files.delete', description: 'Delete files', resource: 'files', action: 'delete' },
+    
+    // Menu management
+    { name: 'menu.create', description: 'Create new menus', resource: 'menu', action: 'create' },
+    { name: 'menu.read', description: 'View menu information', resource: 'menu', action: 'read' },
+    { name: 'menu.update', description: 'Update menu information', resource: 'menu', action: 'update' },
+    { name: 'menu.delete', description: 'Delete menus', resource: 'menu', action: 'delete' },
   ]
 
   for (const permission of permissions) {

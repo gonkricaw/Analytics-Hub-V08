@@ -103,6 +103,13 @@ export const PERMISSIONS = {
   AUDIT_READ: 'audit.read',
   AUDIT_EXPORT: 'audit.export',
   
+  // Menu permissions
+  MENU_CREATE: 'menu.create',
+  MENU_READ: 'menu.read',
+  MENU_UPDATE: 'menu.update',
+  MENU_DELETE: 'menu.delete',
+  MENU_MANAGE: 'menu.manage',
+  
   // System permissions
   SYSTEM_ADMIN: 'system.admin',
   SYSTEM_MAINTENANCE: 'system.maintenance',
