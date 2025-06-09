@@ -545,7 +545,7 @@ export async function sendPasswordResetEmailFromTemplate(to: string, variables: 
   } catch (error) {
     console.error('Failed to send password reset email from template, falling back to hardcoded template:', error);
     // Fallback to existing hardcoded template
-    await sendPasswordResetEmail(to, variables.resetUrl, variables.firstName);
+    await sendPasswordResetEmail(to, variables.name || variables.firstName, variables.resetUrl, variables.expiryTime, variables.requestIP);
   }
 }
 

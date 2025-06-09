@@ -174,7 +174,7 @@ export default function LoginForm() {
         </div>
         <button
           type="button"
-          className="text-sm text-accent hover:text-accent/80 transition-colors"
+          className="text-sm text-white hover:text-orange-500 transition-colors"
           onClick={() => router.push('/forgot-password')}
           disabled={isLoading}
         >

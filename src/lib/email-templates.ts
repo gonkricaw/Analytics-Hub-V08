@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import nodemailer from 'nodemailer'
 import { EmailConfig } from '@/types'
+import { prisma } from './prisma'
 
 // Email configuration
 const emailConfig: EmailConfig = {

@@ -41,6 +41,9 @@ model idbi_users {
   sessions                 idbi_user_sessions[]
   created_menus            idbi_menus[]            @relation("MenuCreator")
   updated_menus            idbi_menus[]            @relation("MenuUpdater")
+  created_notifications    idbi_notifications[]    @relation("NotificationCreator")
+  received_notifications   idbi_notifications[]    @relation("NotificationReceiver")
+  created_announcements    idbi_announcements[]    @relation("AnnouncementCreator")
   role                     idbi_roles              @relation(fields: [role_id], references: [id])
 
   @@map("idbi_users")
@@ -102,13 +105,9 @@ model idbi_user_sessions {
 model idbi_password_resets {
   id         String     @id @default(cuid())
   user_id    String
-  email      String
   token      String     @unique
-  token_hash String     @unique
   expires_at DateTime
   used_at    DateTime?
-  ip_address String?
-  user_agent String?
   created_at DateTime   @default(now())
   user       idbi_users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -118,8 +117,6 @@ model idbi_password_resets {
 model idbi_user_invitations {
   id               String     @id @default(cuid())
   email            String
-  first_name       String
-  last_name        String
   role_id          String
   invited_by       String
   invitation_token String     @unique
@@ -141,19 +138,17 @@ model idbi_content {
   content_type    String
   content_data    Json?
   embed_url       String?
-  encrypted_url   String?
   is_active       Boolean                    @default(true)
-  is_public       Boolean                    @default(false)
+  is_featured     Boolean                    @default(false)
   view_count      Int                        @default(0)
-  last_viewed     DateTime?
   created_at      DateTime                   @default(now())
   updated_at      DateTime                   @updatedAt
   created_by      String
   updated_by      String?
-  creator         idbi_users                 @relation("ContentCreator", fields: [created_by], references: [id])
-  updater         idbi_users?                @relation("ContentUpdater", fields: [updated_by], references: [id])
   categories      idbi_content_categories[]
   permissions     idbi_content_permissions[]
+  creator         idbi_users                 @relation("ContentCreator", fields: [created_by], references: [id])
+  updater         idbi_users?                @relation("ContentUpdater", fields: [updated_by], references: [id])
   dashboard_items idbi_dashboard_items[]
 
   @@map("idbi_content")
@@ -174,7 +169,7 @@ model idbi_categories {
 }
 
 model idbi_content_categories {
-  id          String          @id @default(cuid())
+  id          String         @id @default(cuid())
   content_id  String
   category_id String
   category    idbi_categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
@@ -190,7 +185,8 @@ model idbi_content_permissions {
   role_id    String
   can_view   Boolean      @default(true)
   can_edit   Boolean      @default(false)
-  can_delete Boolean      @default(false)
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
   content    idbi_content @relation(fields: [content_id], references: [id], onDelete: Cascade)
   role       idbi_roles   @relation(fields: [role_id], references: [id], onDelete: Cascade)
 
@@ -342,4 +338,57 @@ model idbi_menu_roles {
 
   @@unique([menu_id, role_id])
   @@map("idbi_menu_roles")
+}
+
+model idbi_notifications {
+  id               String      @id @default(cuid())
+  title            String
+  message          String
+  type             String      @default("info") // info, success, warning, error
+  target_user_id   String?     // null for system-wide notifications
+  is_read          Boolean     @default(false)
+  is_active        Boolean     @default(true)
+  priority         String      @default("normal") // low, normal, high, urgent
+  action_url       String?
+  action_text      String?
+  metadata         Json?
+  expires_at       DateTime?
+  read_at          DateTime?
+  deleted_at       DateTime?
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  created_by       String
+  target_user      idbi_users? @relation("NotificationReceiver", fields: [target_user_id], references: [id], onDelete: Cascade)
+  created_by_user  idbi_users  @relation("NotificationCreator", fields: [created_by], references: [id])
+
+  @@index([target_user_id, is_read])
+  @@index([created_at])
+  @@index([expires_at])
+  @@map("idbi_notifications")
+}
+
+model idbi_announcements {
+  id               String      @id @default(cuid())
+  title            String
+  content          String
+  type             String      @default("info") // info, success, warning, error
+  is_active        Boolean     @default(true)
+  is_pinned        Boolean     @default(false)
+  priority         String      @default("normal") // low, normal, high, urgent
+  target_roles     String[]    @default([]) // empty array means all roles
+  action_url       String?
+  action_text      String?
+  metadata         Json?
+  starts_at        DateTime?   @default(now())
+  expires_at       DateTime?
+  deleted_at       DateTime?
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+  created_by       String
+  created_by_user  idbi_users  @relation("AnnouncementCreator", fields: [created_by], references: [id])
+
+  @@index([is_active, starts_at, expires_at])
+  @@index([created_at])
+  @@index([priority])
+  @@map("idbi_announcements")
 }

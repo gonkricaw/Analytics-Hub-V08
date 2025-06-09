@@ -40,6 +40,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   const [dashboardUpdates, setDashboardUpdates] = useState<DashboardUpdate[]>([])
   const [userStatusUpdates, setUserStatusUpdates] = useState<UserStatusUpdate[]>([])
   const [notifications, setNotifications] = useState<NotificationData[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const connect = useCallback(() => {
     if (!session?.user || socketRef.current?.connected) {
@@ -112,6 +113,42 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
       // Notification events
       socket.on('notification:receive', (notification: NotificationData) => {
         setNotifications(prev => [notification, ...prev.slice(0, 19)]) // Keep last 20 notifications
+        setUnreadCount(prev => prev + 1)
+      })
+
+      // Handle notification list
+      socket.on('notification:list', (data: { notifications: NotificationData[] }) => {
+        setNotifications(data.notifications)
+        setUnreadCount(data.notifications.filter(n => !n.read).length)
+      })
+
+      // Handle unread count updates
+      socket.on('notification:unread_count', (data: { count: number }) => {
+        setUnreadCount(data.count)
+      })
+
+      // Handle notification marked as read
+      socket.on('notification:marked_read', (data: { notificationId: string }) => {
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === data.notificationId 
+              ? { ...n, read: true }
+              : n
+          )
+        )
+      })
+
+      // Handle all notifications marked as read
+      socket.on('notification:all_marked_read', (data: { count: number }) => {
+        setNotifications(prev => 
+          prev.map(n => ({ ...n, read: true }))
+        )
+        setUnreadCount(0)
+      })
+
+      // Handle errors
+      socket.on('notification:error', (data: { message: string }) => {
+        console.error('Notification error:', data.message)
       })
 
       // Dashboard refresh response
@@ -191,6 +228,63 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     setNotifications([])
   }, [])
 
+  const markAsRead = useCallback((notificationId: string) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('notification:mark_read', { notificationId })
+    }
+  }, [])
+
+  const markAllAsRead = useCallback(() => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('notification:mark_all_read')
+    }
+  }, [])
+
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    // Remove from local state immediately for better UX
+    setNotifications(prev => prev.filter(n => n.id !== notificationId))
+    
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete notification')
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+      
+      // Refresh notifications on error
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('notification:get', { limit: 50 })
+      }
+    }
+  }, [])
+
+  const deleteAllNotifications = useCallback(async () => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete all notifications')
+      }
+      
+      setNotifications([])
+      setUnreadCount(0)
+    } catch (error) {
+      console.error('Error deleting all notifications:', error)
+    }
+  }, [])
+
+  const getNotifications = useCallback((options?: { limit?: number; offset?: number; unreadOnly?: boolean }) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('notification:get', options || { limit: 50 })
+    }
+  }, [])
+
   const clearDashboardUpdates = useCallback(() => {
     setDashboardUpdates([])
   }, [])
@@ -249,6 +343,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     dashboardUpdates,
     userStatusUpdates,
     notifications,
+    unreadCount,
     
     // Actions
     sendUserActivity,
@@ -256,9 +351,14 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     sendNotification,
     clearNotifications,
     clearDashboardUpdates,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
+    getNotifications,
     
     // Computed values
-    hasUnreadNotifications: notifications.length > 0,
+    hasUnreadNotifications: unreadCount > 0,
     latestNotification: notifications[0] || null,
     reconnectAttempts: reconnectAttemptsRef.current
   }

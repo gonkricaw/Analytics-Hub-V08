@@ -59,7 +59,7 @@ export default function HomePage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
             <Link 
-              href="/auth/login" 
+              href="/login" 
               className="btn-primary px-8 py-3 text-lg inline-flex items-center gap-2"
             >
               <Icon icon="mdi:login" className="w-5 h-5" />
