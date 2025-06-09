@@ -26,6 +26,9 @@ model idbi_users {
   must_change_password     Boolean                 @default(true)
   terms_accepted           Boolean                 @default(false)
   terms_accepted_at        DateTime?
+  terms_accepted_ip        String?
+  terms_accepted_user_agent String?
+  current_terms_version    String?
   created_at               DateTime                @default(now())
   updated_at               DateTime                @updatedAt
   created_by               String?
@@ -44,6 +47,11 @@ model idbi_users {
   created_notifications    idbi_notifications[]    @relation("NotificationCreator")
   received_notifications   idbi_notifications[]    @relation("NotificationReceiver")
   created_announcements    idbi_announcements[]    @relation("AnnouncementCreator")
+  created_terms_versions   idbi_terms_versions[]   @relation("TermsCreator")
+  updated_terms_versions   idbi_terms_versions[]   @relation("TermsUpdater")
+  approved_terms_versions  idbi_terms_versions[]   @relation("TermsApprover")
+  terms_acceptances        idbi_user_terms_acceptance[]
+  current_terms            idbi_terms_versions?    @relation("UserCurrentTerms", fields: [current_terms_version], references: [id])
   role                     idbi_roles              @relation(fields: [role_id], references: [id])
 
   @@map("idbi_users")
@@ -391,4 +399,44 @@ model idbi_announcements {
   @@index([created_at])
   @@index([priority])
   @@map("idbi_announcements")
+}
+
+model idbi_terms_versions {
+  id                    String                      @id @default(cuid())
+  version               String                      @unique
+  title                 String
+  content               String
+  is_active             Boolean                     @default(false)
+  is_published          Boolean                     @default(false)
+  effective_date        DateTime?
+  created_at            DateTime                    @default(now())
+  updated_at            DateTime                    @updatedAt
+  created_by            String
+  updated_by            String?
+  change_summary        String?
+  approval_status       String                      @default("draft") // draft, pending, approved, rejected
+  approved_by           String?
+  approved_at           DateTime?
+  creator               idbi_users                  @relation("TermsCreator", fields: [created_by], references: [id])
+  updater               idbi_users?                 @relation("TermsUpdater", fields: [updated_by], references: [id])
+  approver              idbi_users?                 @relation("TermsApprover", fields: [approved_by], references: [id])
+  user_acceptances      idbi_user_terms_acceptance[]
+  users_with_current    idbi_users[]                @relation("UserCurrentTerms")
+
+  @@map("idbi_terms_versions")
+}
+
+model idbi_user_terms_acceptance {
+  id                String              @id @default(cuid())
+  user_id           String
+  terms_version_id  String
+  accepted_at       DateTime            @default(now())
+  ip_address        String?
+  user_agent        String?
+  acceptance_method String              @default("web") // web, api, mobile
+  user              idbi_users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  terms_version     idbi_terms_versions @relation(fields: [terms_version_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, terms_version_id])
+  @@map("idbi_user_terms_acceptance")
 }
