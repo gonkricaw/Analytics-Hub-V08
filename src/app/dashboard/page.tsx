@@ -8,6 +8,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
+import DigitalClock from '@/components/dashboard/DigitalClock'
+import LoginActivityChart from '@/components/dashboard/LoginActivityChart'
+import TopUsers from '@/components/dashboard/TopUsers'
+import OnlineUsers from '@/components/dashboard/OnlineUsers'
+import Announcements from '@/components/dashboard/Announcements'
+import NewUsers from '@/components/dashboard/NewUsers'
+import ContentAnalytics from '@/components/dashboard/ContentAnalytics'
+import { RealTimeNotifications } from '@/components/dashboard/RealTimeNotifications'
+import AnalyticsOverview from '@/components/dashboard/AnalyticsOverview'
 
 interface DashboardStats {
   totalUsers: number
@@ -176,16 +185,20 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Dashboard Widgets Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Digital Clock */}
+        <DigitalClock className="lg:col-span-1" />
+        
         {/* Quick Actions */}
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-white">Quick Actions</CardTitle>
             <CardDescription className="text-white/70">
               Common tasks and shortcuts
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="grid grid-cols-2 gap-3">
             <Link href="/dashboard/content/create">
               <Button variant="outline" className="w-full justify-start border-white/20 text-white hover:bg-orange-500/20 hover:border-orange-500">
                 <Icon icon="mdi:file-document-plus" className="mr-2 h-4 w-4" />
@@ -212,9 +225,41 @@ export default function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Analytics Widgets */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Login Activity Chart */}
+        <LoginActivityChart className="lg:col-span-1" />
+        
+        {/* Content Analytics */}
+        <ContentAnalytics className="lg:col-span-1" days={7} />
+      </div>
+
+      {/* User Management Widgets */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Top Users */}
+        <TopUsers className="lg:col-span-1" limit={5} />
+        
+        {/* Online Users */}
+        <OnlineUsers className="lg:col-span-1" limit={8} />
+        
+        {/* New Users */}
+        <NewUsers className="lg:col-span-1" limit={5} days={30} />
+      </div>
+
+      {/* Information and Activity */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Announcements */}
+        <Announcements className="lg:col-span-1" limit={3} />
+        
+        {/* Real-time Notifications */}
+        <div className="lg:col-span-1">
+          <RealTimeNotifications />
+        </div>
+        
         {/* Recent Activity */}
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 lg:col-span-1">
           <CardHeader>
             <CardTitle className="text-white">Recent Activity</CardTitle>
             <CardDescription className="text-white/70">
@@ -235,8 +280,8 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : recentActivity.length > 0 ? (
-              <div className="space-y-3">
-                {recentActivity.slice(0, 5).map((activity) => (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {recentActivity.slice(0, 8).map((activity) => (
                   <div key={activity.id} className="flex items-start space-x-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/20">
                       <Icon 
@@ -268,7 +313,12 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* System Status */}
+      {/* Analytics Overview Section */}
+      <div className="mt-8">
+        <AnalyticsOverview />
+      </div>
+
+      {/* System Status */
       <Card className="bg-white/10 backdrop-blur-sm border-white/20">
         <CardHeader>
           <CardTitle className="text-white">System Status</CardTitle>
