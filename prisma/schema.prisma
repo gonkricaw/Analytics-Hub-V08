@@ -39,6 +39,8 @@ model idbi_users {
   invitations_received     idbi_user_invitations[] @relation("InvitationReceiver")
   invitations_sent         idbi_user_invitations[] @relation("InvitationSender")
   sessions                 idbi_user_sessions[]
+  created_menus            idbi_menus[]            @relation("MenuCreator")
+  updated_menus            idbi_menus[]            @relation("MenuUpdater")
   role                     idbi_roles              @relation(fields: [role_id], references: [id])
 
   @@map("idbi_users")
@@ -55,6 +57,7 @@ model idbi_roles {
   role_permissions    idbi_role_permissions[]
   user_invitations    idbi_user_invitations[]
   users               idbi_users[]
+  menu_roles          idbi_menu_roles[]
 
   @@map("idbi_roles")
 }
@@ -290,10 +293,53 @@ model idbi_files {
   mime_type     String
   file_size     Int
   file_path     String
+  category      String     @default("general")
+  description   String?
   uploaded_by   String
   is_public     Boolean    @default(false)
   created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
   uploader      idbi_users @relation(fields: [uploaded_by], references: [id])
 
   @@map("idbi_files")
+}
+
+model idbi_menus {
+  id          String            @id @default(cuid())
+  title       String
+  slug        String            @unique
+  icon        String?
+  path        String?
+  parent_id   String?
+  order_index Int               @default(0)
+  level       Int               @default(0)
+  is_active   Boolean           @default(true)
+  is_external Boolean           @default(false)
+  target      String            @default("_self")
+  description String?
+  created_at  DateTime          @default(now())
+  updated_at  DateTime          @updatedAt
+  created_by  String
+  updated_by  String?
+  parent      idbi_menus?       @relation("MenuHierarchy", fields: [parent_id], references: [id])
+  children    idbi_menus[]      @relation("MenuHierarchy")
+  creator     idbi_users        @relation("MenuCreator", fields: [created_by], references: [id])
+  updater     idbi_users?       @relation("MenuUpdater", fields: [updated_by], references: [id])
+  menu_roles  idbi_menu_roles[]
+
+  @@map("idbi_menus")
+}
+
+model idbi_menu_roles {
+  id         String     @id @default(cuid())
+  menu_id    String
+  role_id    String
+  can_view   Boolean    @default(true)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  menu       idbi_menus @relation(fields: [menu_id], references: [id], onDelete: Cascade)
+  role       idbi_roles @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([menu_id, role_id])
+  @@map("idbi_menu_roles")
 }

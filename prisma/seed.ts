@@ -211,10 +211,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash('Admin@123!', 12)
   
   const adminUser = await prisma.idbi_users.upsert({
-    where: { email: 'admin@analyticshub.com' },
+    where: { email: 'powerbi@indonet.id' },
     update: {},
     create: {
-      email: 'admin@analyticshub.com',
+      email: 'powerbi@indonet.id',
       username: 'admin',
       password_hash: hashedPassword,
       first_name: 'System',
@@ -325,7 +325,7 @@ async function main() {
   })
 
   console.log('✅ Database seeding completed successfully!')
-  console.log('📧 Default admin user: admin@analyticshub.com')
+  console.log('📧 Default admin user: powerbi@indonet.id')
   console.log('🔑 Default admin password: Admin@123!')
   console.log('⚠️  Please change the default password after first login')
 }
