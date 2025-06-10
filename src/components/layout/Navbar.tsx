@@ -5,17 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { Icon } from '@iconify/react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatedButton } from '@/components/animations/MicroInteractions'
 import { filterMenuByPermissions } from '@/lib/menu-filter'
 import { cn } from '@/lib/utils'
 
@@ -214,206 +205,355 @@ export default function Navbar({ className }: NavbarProps) {
   }
 
   return (
-    <nav className={cn(
-      'sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60',
-      className
-    )}>
-      <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-        {/* Logo and Brand */}
-        <div className="flex items-center space-x-4">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500">
-              <Icon icon="mdi:chart-line" className="h-5 w-5 text-white" />
-            </div>
-            <span className="hidden font-bold text-gray-900 sm:inline-block">
-              Analytics Hub
-            </span>
-          </Link>
-        </div>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex md:items-center md:space-x-1">
-          {loading ? (
-            <div className="flex items-center space-x-2">
-              <Icon icon="mdi:loading" className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-gray-500">Loading menu...</span>
-            </div>
-          ) : (
-            menuTree.map(item => renderMenuItem(item))
-          )}
-        </div>
-
-        {/* Right Side Actions */}
-        <div className="flex items-center space-x-3">
-          {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Icon icon="mdi:bell" className="h-5 w-5" />
-            {notifications > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
-              >
-                {notifications > 99 ? '99+' : notifications}
-              </Badge>
-            )}
-          </Button>
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={session.user.avatar_url || ''}
-                    alt={session.user.first_name || ''}
-                  />
-                  <AvatarFallback className="bg-orange-500 text-white">
-                    {session.user.first_name?.[0]}{session.user.last_name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {session.user.first_name} {session.user.last_name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {session.user.email}
-                  </p>
-                  <Badge variant="outline" className="w-fit text-xs">
-                    {session.user.role?.name}
-                  </Badge>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/profile" className="cursor-pointer">
-                  <Icon icon="mdi:account" className="mr-2 h-4 w-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings" className="cursor-pointer">
-                  <Icon icon="mdi:cog" className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-red-600 focus:text-red-600"
-                onClick={handleSignOut}
-              >
-                <Icon icon="mdi:logout" className="mr-2 h-4 w-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Mobile Menu Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+    <motion.nav 
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className={cn(
+        'sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md',
+        className
+      )}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Icon
-              icon={isMenuOpen ? 'mdi:close' : 'mdi:menu'}
-              className="h-5 w-5"
-            />
-          </Button>
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <motion.div 
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent hover-glow"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Icon icon="mdi:chart-line" className="h-5 w-5 text-white" />
+              </motion.div>
+              <span className="text-xl font-bold gradient-text">Analytics Hub</span>
+            </Link>
+          </motion.div>
+
+          {/* Desktop Navigation */}
+          <motion.div 
+            className="hidden md:flex md:items-center md:space-x-1"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <Icon icon="mdi:loading" className="h-4 w-4 animate-spin text-accent" />
+                <span className="text-sm text-white/70">Loading menu...</span>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {menus.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    {item.is_external ? (
+                      <motion.a
+                        href={item.path}
+                        target={item.target}
+                        className="navbar-item px-3 py-2 rounded-lg flex items-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {item.icon && (
+                          <Icon icon={item.icon} className="h-4 w-4" />
+                        )}
+                        {item.title}
+                        <Icon icon="mdi:external-link" className="h-3 w-3" />
+                      </motion.a>
+                    ) : (
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Link
+                          href={item.path || '#'}
+                          className={cn(
+                            'navbar-item px-3 py-2 rounded-lg flex items-center gap-2',
+                            item.path && isActiveLink(item.path) && 'text-accent bg-accent/10'
+                          )}
+                        >
+                          {item.icon && (
+                            <Icon icon={item.icon} className="h-4 w-4" />
+                          )}
+                          {item.title}
+                        </Link>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+          </motion.div>
+
+          {/* Right Side Actions */}
+          <motion.div 
+            className="flex items-center space-x-3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            {/* Notifications */}
+            <motion.button
+              className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Icon icon="mdi:bell" className="h-5 w-5 text-white/80 hover:text-accent transition-colors" />
+              {notifications > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center"
+                >
+                  {notifications > 99 ? '99+' : notifications}
+                </motion.span>
+              )}
+            </motion.button>
+
+            {/* User Menu */}
+            <div className="relative">
+              <motion.button
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-medium">
+                  {session?.user?.first_name?.[0]}{session?.user?.last_name?.[0]}
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium text-white">
+                    {session?.user?.first_name} {session?.user?.last_name}
+                  </p>
+                  <p className="text-xs text-white/60">
+                    {session?.user?.role?.name}
+                  </p>
+                </div>
+                <Icon icon="mdi:chevron-down" className="h-4 w-4 text-white/60" />
+              </motion.button>
+
+              {/* User Dropdown */}
+              <AnimatePresence>
+                {isMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-56 glass-effect-strong rounded-lg shadow-xl border border-white/20 py-2 z-50"
+                  >
+                    <div className="px-4 py-3 border-b border-white/10">
+                      <p className="text-sm font-medium text-white">
+                        {session?.user?.first_name} {session?.user?.last_name}
+                      </p>
+                      <p className="text-xs text-white/60">
+                        {session?.user?.email}
+                      </p>
+                      <span className="status-active mt-2">
+                        {session?.user?.role?.name}
+                      </span>
+                    </div>
+                    
+                    <div className="py-2">
+                      <Link
+                        href="/dashboard/profile"
+                        className="flex items-center px-4 py-2 text-sm text-white/80 hover:text-accent hover:bg-accent/10 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Icon icon="mdi:account" className="mr-3 h-4 w-4" />
+                        Profile
+                      </Link>
+                      <Link
+                        href="/dashboard/settings"
+                        className="flex items-center px-4 py-2 text-sm text-white/80 hover:text-accent hover:bg-accent/10 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Icon icon="mdi:cog" className="mr-3 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </div>
+                    
+                    <div className="border-t border-white/10 pt-2">
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                      >
+                        <Icon icon="mdi:logout" className="mr-3 h-4 w-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <motion.button
+              className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Icon
+                icon={isMenuOpen ? 'mdi:close' : 'mdi:menu'}
+                className="h-5 w-5 text-white/80"
+              />
+            </motion.button>
         </div>
       </div>
 
       {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="border-t border-gray-200 bg-white md:hidden">
-          <div className="space-y-1 px-4 py-3">
-            {loading ? (
-              <div className="flex items-center space-x-2 py-2">
-                <Icon icon="mdi:loading" className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-gray-500">Loading menu...</span>
-              </div>
-            ) : (
-              menuTree.map(item => (
-                <div key={item.id} className="space-y-1">
-                  {item.is_external ? (
-                    <a
-                      href={item.path}
-                      target={item.target}
-                      className={cn(
-                        'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-orange-500/10 hover:text-orange-500',
-                        item.path && isActiveLink(item.path) && 'bg-orange-500/20 text-orange-500'
-                      )}
-                      onClick={() => setIsMenuOpen(false)}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="md:hidden border-t border-white/20 glass-effect-strong"
+          >
+            <motion.div
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              exit={{ y: -20 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
+              className="px-4 py-6 space-y-4"
+            >
+              {isLoading ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center justify-center py-8"
+                >
+                  <Icon icon="mdi:loading" className="h-6 w-6 animate-spin text-accent" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.1
+                      }
+                    }
+                  }}
+                  initial="hidden"
+                  animate="show"
+                  className="space-y-2"
+                >
+                  {menuTree.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      variants={{
+                        hidden: { opacity: 0, x: -20 },
+                        show: { opacity: 1, x: 0 }
+                      }}
                     >
-                      {item.icon && (
-                        <Icon icon={item.icon} className="mr-3 h-4 w-4" />
+                      {item.children && item.children.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="px-3 py-2 text-sm font-semibold text-accent uppercase tracking-wider">
+                            {item.title}
+                          </div>
+                          {item.children.map((child) => (
+                            <motion.div
+                              key={child.id}
+                              whileHover={{ x: 4 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              {child.is_external ? (
+                                <a
+                                  href={child.path}
+                                  target={child.target}
+                                  className={`block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 flex items-center ${
+                                    isActiveLink(child.path || '')
+                                      ? 'bg-accent text-white shadow-lg'
+                                      : 'text-white/80 hover:text-accent hover:bg-accent/10 hover:shadow-md'
+                                  }`}
+                                  onClick={() => setIsMenuOpen(false)}
+                                >
+                                  {child.icon && (
+                                    <Icon icon={child.icon} className="mr-3 h-4 w-4" />
+                                  )}
+                                  {child.title}
+                                  <Icon icon="mdi:external-link" className="ml-auto h-3 w-3" />
+                                </a>
+                              ) : (
+                                <Link
+                                  href={child.path || '#'}
+                                  className={`block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 flex items-center ${
+                                    isActiveLink(child.path || '')
+                                      ? 'bg-accent text-white shadow-lg'
+                                      : 'text-white/80 hover:text-accent hover:bg-accent/10 hover:shadow-md'
+                                  }`}
+                                  onClick={() => setIsMenuOpen(false)}
+                                >
+                                  {child.icon && (
+                                    <Icon icon={child.icon} className="mr-3 h-4 w-4" />
+                                  )}
+                                  {child.title}
+                                </Link>
+                              )}
+                            </motion.div>
+                          ))}
+                        </div>
+                      ) : (
+                        <motion.div
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {item.is_external ? (
+                            <a
+                              href={item.path}
+                              target={item.target}
+                              className={`block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 flex items-center ${
+                                isActiveLink(item.path || '')
+                                  ? 'bg-accent text-white shadow-lg'
+                                  : 'text-white/80 hover:text-accent hover:bg-accent/10 hover:shadow-md'
+                              }`}
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              {item.icon && (
+                                <Icon icon={item.icon} className="mr-3 h-4 w-4" />
+                              )}
+                              {item.title}
+                              <Icon icon="mdi:external-link" className="ml-auto h-3 w-3" />
+                            </a>
+                          ) : (
+                            <Link
+                              href={item.path || '#'}
+                              className={`block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 flex items-center ${
+                                isActiveLink(item.path || '')
+                                  ? 'bg-accent text-white shadow-lg'
+                                  : 'text-white/80 hover:text-accent hover:bg-accent/10 hover:shadow-md'
+                              }`}
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              {item.icon && (
+                                <Icon icon={item.icon} className="mr-3 h-4 w-4" />
+                              )}
+                              {item.title}
+                            </Link>
+                          )}
+                        </motion.div>
                       )}
-                      {item.title}
-                      <Icon icon="mdi:external-link" className="ml-auto h-3 w-3" />
-                    </a>
-                  ) : (
-                    <Link
-                      href={item.path || '#'}
-                      className={cn(
-                        'flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-orange-500/10 hover:text-orange-500',
-                        item.path && isActiveLink(item.path) && 'bg-orange-500/20 text-orange-500'
-                      )}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.icon && (
-                        <Icon icon={item.icon} className="mr-3 h-4 w-4" />
-                      )}
-                      {item.title}
-                    </Link>
-                  )}
-                  {item.children && item.children.length > 0 && (
-                    <div className="ml-6 space-y-1">
-                      {item.children.map(child => (
-                        child.is_external ? (
-                          <a
-                            key={child.id}
-                            href={child.path}
-                            target={child.target}
-                            className={cn(
-                              'flex items-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-orange-500/10 hover:text-orange-500',
-                              child.path && isActiveLink(child.path) && 'bg-orange-500/20 text-orange-500'
-                            )}
-                            onClick={() => setIsMenuOpen(false)}
-                          >
-                            {child.icon && (
-                              <Icon icon={child.icon} className="mr-3 h-4 w-4" />
-                            )}
-                            {child.title}
-                            <Icon icon="mdi:external-link" className="ml-auto h-3 w-3" />
-                          </a>
-                        ) : (
-                          <Link
-                            key={child.id}
-                            href={child.path || '#'}
-                            className={cn(
-                              'flex items-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-orange-500/10 hover:text-orange-500',
-                              child.path && isActiveLink(child.path) && 'bg-orange-500/20 text-orange-500'
-                            )}
-                            onClick={() => setIsMenuOpen(false)}
-                          >
-                            {child.icon && (
-                              <Icon icon={child.icon} className="mr-3 h-4 w-4" />
-                            )}
-                            {child.title}
-                          </Link>
-                        )
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

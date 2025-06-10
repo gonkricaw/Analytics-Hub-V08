@@ -46,9 +46,14 @@ export async function POST(request: NextRequest) {
     const blacklistedIP = await prisma.idbi_ip_blacklist.findFirst({
       where: {
         ip_address: clientIP,
-        expires_at: {
-          gt: new Date()
-        }
+        OR: [
+          { is_permanent: true },
+          {
+            blocked_until: {
+              gt: new Date()
+            }
+          }
+        ]
       }
     })
 
@@ -93,9 +98,9 @@ export async function POST(request: NextRequest) {
       // Log the failed attempt
       await prisma.idbi_audit_logs.create({
         data: {
-          user_id: user?.id || null,
+          user: user?.id ? { connect: { id: user.id } } : undefined,
           action: 'LOGIN_FAILED',
-          resource_type: 'AUTH',
+          resource: 'AUTH',
           resource_id: null,
           ip_address: clientIP,
           user_agent: userAgent,
@@ -183,17 +188,16 @@ export async function POST(request: NextRequest) {
     await prisma.idbi_users.update({
       where: { id: user.id },
       data: {
-        last_login_at: new Date(),
-        last_login_ip: clientIP
+        last_login: new Date()
       }
     })
 
     // Log successful login
     await prisma.idbi_audit_logs.create({
       data: {
-        user_id: user.id,
+        user: { connect: { id: user.id } },
         action: 'LOGIN_SUCCESS',
-        resource_type: 'AUTH',
+        resource: 'AUTH',
         resource_id: user.id,
         ip_address: clientIP,
         user_agent: userAgent,
