@@ -51,6 +51,7 @@ model idbi_users {
   updated_terms_versions   idbi_terms_versions[]   @relation("TermsUpdater")
   approved_terms_versions  idbi_terms_versions[]   @relation("TermsApprover")
   terms_acceptances        idbi_user_terms_acceptance[]
+  performance_metrics      idbi_performance_metrics[]
   current_terms            idbi_terms_versions?    @relation("UserCurrentTerms", fields: [current_terms_version], references: [id])
   role                     idbi_roles              @relation(fields: [role_id], references: [id])
 
@@ -439,4 +440,24 @@ model idbi_user_terms_acceptance {
 
   @@unique([user_id, terms_version_id])
   @@map("idbi_user_terms_acceptance")
+}
+
+model idbi_performance_metrics {
+  id          String    @id @default(cuid())
+  metric_name String
+  value       Float
+  rating      String?   // good, needs-improvement, poor
+  timestamp   DateTime  @default(now())
+  url         String?
+  user_agent  String?
+  user_id     String?
+  created_at  DateTime  @default(now())
+  user        idbi_users? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([metric_name])
+  @@index([timestamp])
+  @@index([user_id])
+  @@index([url])
+  @@index([rating])
+  @@map("idbi_performance_metrics")
 }

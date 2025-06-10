@@ -1,8 +1,28 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import dynamic from 'next/dynamic'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+// Optimize font loading
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-inter'
+})
+
+// Lazy load non-critical components
+const ToastProvider = dynamic(() => import('@/components/ui/toaster').then(mod => ({ default: mod.Toaster })), {
+  ssr: false
+})
+
+const QueryProvider = dynamic(() => import('@/components/providers/QueryProvider'), {
+  ssr: false
+})
+
+const PerformanceMonitor = dynamic(() => import('@/components/performance/PerformanceMonitor'), {
+  ssr: false
+})
 
 export const metadata: Metadata = {
   title: 'Analytics Hub - Business Intelligence Dashboard',
@@ -42,12 +62,16 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.className} antialiased`}>
-        <div id="root">
-          {children}
-        </div>
-        <div id="modal-root"></div>
-        <div id="tooltip-root"></div>
+      <body className={`${inter.className} ${inter.variable} antialiased`}>
+        <QueryProvider>
+          <div id="root">
+            {children}
+          </div>
+          <div id="modal-root"></div>
+          <div id="tooltip-root"></div>
+          <ToastProvider />
+          <PerformanceMonitor />
+        </QueryProvider>
       </body>
     </html>
   )

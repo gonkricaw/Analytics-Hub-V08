@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import { Icon } from '@iconify/react'
+import dynamic from 'next/dynamic'
 import {
   Card,
   CardContent,
@@ -24,8 +25,23 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js'
-import { Line, Bar, Doughnut } from 'react-chartjs-2'
 import Link from 'next/link'
+
+// Lazy load chart components for better performance
+const Line = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Line })), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[300px] w-full" />
+})
+
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Bar })), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[300px] w-full" />
+})
+
+const Doughnut = dynamic(() => import('react-chartjs-2').then(mod => ({ default: mod.Doughnut })), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[300px] w-full" />
+})
 
 // Register Chart.js components
 ChartJS.register(
@@ -80,17 +96,13 @@ interface AnalyticsOverviewProps {
   className?: string
 }
 
-export default function AnalyticsOverview({ className = '' }: AnalyticsOverviewProps) {
+const AnalyticsOverview = memo(function AnalyticsOverview({ className = '' }: AnalyticsOverviewProps) {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    fetchAnalyticsData()
-  }, [])
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setError(null)
       
@@ -210,16 +222,20 @@ export default function AnalyticsOverview({ className = '' }: AnalyticsOverviewP
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleRefresh = async () => {
+  useEffect(() => {
+    fetchAnalyticsData()
+  }, [fetchAnalyticsData])
+
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true)
     await fetchAnalyticsData()
     setRefreshing(false)
-  }
+  }, [fetchAnalyticsData])
 
-  // Chart configurations
-  const activityChartData = {
+  // Memoized chart configurations for performance
+  const activityChartData = useMemo(() => ({
     labels: data?.userActivity.activityByDay.map(day => 
       new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     ) || [],
@@ -233,9 +249,25 @@ export default function AnalyticsOverview({ className = '' }: AnalyticsOverviewP
         fill: true,
       },
     ],
-  }
+  }), [data?.userActivity.activityByDay])
 
-  const contentTypeChartData = {
+  const contentChartData = useMemo(() => ({
+    labels: data?.userActivity.activityByDay.map(day => 
+      new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    ) || [],
+    datasets: [
+      {
+        label: 'Daily Activity',
+        data: data?.userActivity.activityByDay.map(day => day.count) || [],
+        borderColor: '#FF7A00',
+        backgroundColor: 'rgba(255, 122, 0, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  }), [data?.userActivity.activityByDay])
+
+  const contentTypeChartData = useMemo(() => ({
     labels: data?.contentAnalytics.summary.content_by_type.map(type => 
       type.type.charAt(0).toUpperCase() + type.type.slice(1)
     ) || [],
@@ -253,9 +285,9 @@ export default function AnalyticsOverview({ className = '' }: AnalyticsOverviewP
         borderColor: '#0E0E44',
       },
     ],
-  }
+  }), [data?.contentAnalytics.summary.content_by_type])
 
-  const systemHealthChartData = {
+  const systemHealthChartData = useMemo(() => ({
     labels: ['CPU', 'Memory', 'Disk'],
     datasets: [
       {
@@ -270,7 +302,7 @@ export default function AnalyticsOverview({ className = '' }: AnalyticsOverviewP
         borderWidth: 2,
       },
     ],
-  }
+  }), [data?.systemHealth.server])
 
   const chartOptions = {
     responsive: true,
@@ -610,4 +642,8 @@ export default function AnalyticsOverview({ className = '' }: AnalyticsOverviewP
       </div>
     </div>
   )
-}
+})
+
+AnalyticsOverview.displayName = 'AnalyticsOverview'
+
+export default AnalyticsOverview
