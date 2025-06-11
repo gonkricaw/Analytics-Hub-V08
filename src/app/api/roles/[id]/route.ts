@@ -4,7 +4,7 @@ import { getSession } from '@/lib/auth'
 import { createPermissionChecker } from '@/lib/permissions'
 import { PERMISSIONS } from '@/lib/constants'
 import { updateRoleSchema } from '@/lib/validation'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Rate limiting for role operations
 const roleOperationsRateLimit = rateLimit({

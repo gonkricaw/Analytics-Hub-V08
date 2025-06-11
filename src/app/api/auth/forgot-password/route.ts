@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { forgotPasswordSchema } from '@/lib/validation'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 import { sendPasswordResetEmailFromTemplate } from '@/lib/email'
 import crypto from 'crypto'
 

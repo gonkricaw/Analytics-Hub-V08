@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { createToken, createSession } from '@/lib/auth'
 import { loginSchema } from '@/lib/validation'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Rate limiting configuration
 const loginRateLimit = rateLimit({

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { createPermissionChecker } from '@/lib/permissions'
 import { PERMISSIONS } from '@/lib/constants'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Rate limiting for permission operations
 const permissionOperationsRateLimit = rateLimit({

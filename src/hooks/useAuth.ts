@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useContext, createContext, ReactNode } from 'react'
+import React, { useState, useEffect, useContext, createContext, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, LoginCredentials, RegisterData, ChangePasswordData } from '@/types'
 
@@ -168,10 +168,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  return React.createElement(
+    AuthContext.Provider,
+    { value },
+    children
   )
 }
 

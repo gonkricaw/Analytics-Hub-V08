@@ -5,7 +5,7 @@ import { createPermissionChecker } from '@/lib/permissions'
 import { PERMISSIONS } from '@/lib/constants'
 import { createUserSchema, updateUserSchema } from '@/lib/validation'
 import { hashPassword } from '@/lib/auth'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 import crypto from 'crypto'
 
 // Rate limiting for user operations

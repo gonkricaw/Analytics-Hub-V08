@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import { User, UserSession } from '@/types'
+import { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
 
 const secret = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key'
@@ -352,4 +354,76 @@ export async function addToIPBlacklist(
       is_active: true
     }
   })
+}
+
+// NextAuth configuration for compatibility
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        try {
+          // Use the custom login API
+          const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password
+            })
+          })
+
+          const data = await response.json()
+
+          if (response.ok && data.success) {
+            return {
+              id: data.user.id,
+              email: data.user.email,
+              name: `${data.user.firstName} ${data.user.lastName}`,
+              role: data.user.role,
+              permissions: data.user.permissions
+            }
+          }
+
+          // Return null if login failed
+          return null
+        } catch (error) {
+          console.error('NextAuth authorize error:', error)
+          return null
+        }
+      }
+    })
+  ],
+  callbacks: {
+    async session({ session, token }) {
+      // Use custom auth session
+      const customSession = await getSession()
+      if (customSession) {
+        session.user = customSession.user
+      }
+      return session
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+        token.permissions = user.permissions
+      }
+      return token
+    },
+  },
+  pages: {
+    signIn: '/login',
+    signOut: '/logout',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 }

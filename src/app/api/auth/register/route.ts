@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, createToken, createSession } from '@/lib/auth'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 import { sendWelcomeEmailFromTemplate, hasEmailTemplate } from '@/lib/email'
 import { z } from 'zod'
 

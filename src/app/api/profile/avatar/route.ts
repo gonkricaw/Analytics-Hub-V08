@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const timestamp = Date.now()
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const filename = `${user.id}_${timestamp}.${fileExtension}`
+    let filename = `${user.id}_${timestamp}.${fileExtension}`
     const filepath = join(uploadsDir, filename)
 
     try {

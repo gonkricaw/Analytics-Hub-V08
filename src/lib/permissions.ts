@@ -365,5 +365,4 @@ export const RequireRole = (roleName: string) => {
   };
 };
 
-// Export permission checker for use in components and hooks
-export { PermissionChecker };
+// Permission checker is already exported as a class above

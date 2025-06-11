@@ -12,6 +12,7 @@ interface AnimatedButtonProps {
   disabled?: boolean
   loading?: boolean
   className?: string
+  type?: 'button' | 'submit' | 'reset'
 }
 
 export function AnimatedButton({ 
@@ -21,7 +22,8 @@ export function AnimatedButton({
   size = 'md',
   disabled = false,
   loading = false,
-  className = ''
+  className = '',
+  type = 'button'
 }: AnimatedButtonProps) {
   const baseClasses = 'relative overflow-hidden font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/20'
   
@@ -39,6 +41,7 @@ export function AnimatedButton({
 
   return (
     <motion.button
+      type={type}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       onClick={onClick}
       disabled={disabled || loading}
